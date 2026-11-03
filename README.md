@@ -1,4 +1,4 @@
-# DSB_capstone
+# DSB Capstone
 # Machine Learning for Seismic Catalogue Completeness and Aftershock Analysis
 
 ## 1. Project Overview
