@@ -368,3 +368,72 @@ The next stage evaluates model performance on:
 2. A continuous 30-minute waveform segment from the same station.
 
 The objective is to verify the model's ability to identify known seismic signals before extending the analysis to longer recordings and additional stations.
+
+CAPSTONE part II
+
+## Preliminary P- and S-Wave Arrival Detection Using Time Series Analysis
+
+### Objective
+
+Develop and test a custom algorithm for identifying the first P- and S-wave arrivals directly from continuous seismic waveform data, without using pretrained machine learning models.
+
+### Data
+
+- **Earthquake:** 14 March 2024, 03:06:46.30 UTC, M5.3, Čarađe
+- **Station:** CEME
+- **Waveform format:** MiniSEED
+- **Sampling frequency:** 100 Hz (10 ms sampling interval)
+- **Components:** HHZ for P-wave analysis; HHN for S-wave analysis
+- **Reference data:** Manually determined phase arrivals from the GSE seismic bulletin
+
+### 1. P-Wave Detection — HHZ
+
+1. Extracted a 120-second waveform around the mainshock.
+2. Calculated absolute amplitude differences between consecutive samples using Pandas `.diff()`.
+3. Estimated the background noise from a 3.5-second interval preceding the expected P arrival.
+4. Calculated a robust detection threshold using the median and Median Absolute Deviation (MAD).
+5. Identified the first sample exceeding the threshold as a preliminary P-wave arrival candidate.
+6. Compared the detected arrival with the seismic bulletin.
+
+**P-wave results**
+
+| Measurement | UTC arrival |
+|---|---|
+| Bulletin | 03:06:55.370 |
+| Automatic detection | 03:06:55.120 |
+| Manually reviewed candidate | 03:06:55.140 |
+| Automatic detection residual | −0.250 s |
+
+### 2. S-Wave Detection — HHN
+
+1. Analyzed the horizontal HHN component.
+2. Calculated short-term and long-term signal energy using Pandas `.rolling()`.
+3. Examined the STA/LTA energy ratio around the expected S-wave arrival.
+4. Calculated absolute amplitude differences and short-term RMS amplitude using a 0.2-second rolling window.
+5. Identified the strongest sustained RMS increase using a smoothed RMS-change function.
+6. Searched backward over a 0.3-second interval to identify the local RMS minimum preceding this increase.
+7. Used this minimum as a preliminary S-wave onset candidate.
+
+**S-wave results**
+
+| Measurement | UTC arrival |
+|---|---|
+| Bulletin | 03:07:02.960 |
+| Maximum RMS increase | 03:07:03.130 |
+| Estimated S-wave onset | 03:07:02.970 |
+| Estimated onset residual | +0.010 s |
+
+### 3. Preliminary Interpretation
+
+The custom time series analysis produced arrival candidates close to the manually determined phase arrivals.
+
+The P-wave method uses a robust amplitude-change threshold, while the S-wave method combines moving-window energy analysis with a search for the onset of a sustained RMS increase.
+
+These are preliminary results from a single earthquake and station. The algorithms currently operate within selected time intervals and have not yet been validated for independent detection throughout continuous waveform records.
+
+The close agreement of the S-wave candidate with the bulletin does not, by itself, establish the reliability of the method.
+
+
+
+
+
