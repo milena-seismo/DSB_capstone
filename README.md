@@ -369,7 +369,7 @@ The next stage evaluates model performance on:
 
 The objective is to verify the model's ability to identify known seismic signals before extending the analysis to longer recordings and additional stations.
 
-CAPSTONE part II
+### CAPSTONE part II
 
 ## Preliminary P- and S-Wave Arrival Detection Using Time Series Analysis
 
