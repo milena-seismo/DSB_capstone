@@ -1,1 +1,27 @@
+# Capstone modeling results
+
+## Data preparation for modeling
+
+- **Model inputs and waveform preparation** — Loads the cleaned earthquake catalogue and three-component MiniSEED data from CEME, extracts event windows, and prepares filtered waveform copies for inspection.
+
+## Figures
+
+- **Mainshock waveform review** — Shows the three CEME components after mean and trend removal and 1–15 Hz band-pass filtering.
+- **Mainshock P detection** — Shows HHZ amplitude differences and the MAD threshold around the bulletin P arrival.
+- **Mainshock S detection** — Shows HHN energy, STA/LTA, and the RMS rise used to explore the S onset.
+- **Second-event P detection (ML 3.2)** — Compares HHZ amplitude differences, smoothing, STA/LTA, and raw and filtered waveforms around the P onset.
+- **Second-event S detection** — Shows the HHN RMS rise and compares the estimated S arrival with the bulletin.
+- **Third-event waveform review** — Shows the waveform window inspected for the ML 2.3 event before testing stopped due to low signal quality.
+- **Fourth-event P diagnostics** — Compares the original HHZ waveform and amplitude differences with moving-average, Savitzky–Golay, Hann, rolling kurtosis, and Butterworth-filtered views around the bulletin P arrival.
+- **Fourth-event S diagnostics** — Compares raw and 1–15 Hz filtered horizontal waveforms and their short-term energy and STA/LTA, with HHN as the S-picking reference component.
+- **Headline result figure (planned)** — Will summarize automatic P- and S-arrival timing errors at CEME for events with verified reference picks.
+
+## Extended explanations
+
+- **Custom P detection** — Describes how an MAD threshold on absolute HHZ sample differences yields a candidate and how the candidate is converted to UTC.
+- **Custom S detection** — Describes the HHN RMS-rise experiments and the fourth-event test of a sustained STA/LTA crossing on the filtered HHN trace.
+- **Fourth-event P result** — Records the MAD pick at 03:35:09.290 UTC, 0.370 s before the bulletin P arrival, and summarizes the noise-window, search-window, and filtering comparisons.
+- **Fourth-event S result** — Records the first sustained HHN STA/LTA crossing at 03:35:11.400 UTC and the reported absolute difference of 0.060 s from the catalogue S arrival, with the exact catalogue timestamp pending.
+- **EQTransformer comparison** — Documents pretrained P/S picks and detections for the mainshock window and a 30-minute CEME record.
+- **Catalogue association and travel-time check** — Uses station-to-event distances, catalogue depths, and assumed P/S velocities to compare predicted arrivals with selected picks.
 
