@@ -252,15 +252,21 @@ Treating all unmatched candidates as false positives yields conservative baselin
 
 $$
 \mathrm{Precision}_{\text{catalogue}} = \frac{58}{174} = 33.3\%, \qquad
+
 \mathrm{Recall}_{\text{catalogue}} = \frac{58}{272} = 21.3\%, \qquad
+
 F1_{\text{catalogue}} = \frac{2 \times 58}{2 \times 58 + 116 + 214} = 26.0\%
 $$
 
 #### 2. Post-Review Performance and Methodological Scope
-Because the catalogue-only convention penalizes genuine uncatalogued earthquakes as false detections, incorporating the **85** visually confirmed events provides a more realistic precision estimate:
+
+Visual review accepted **85** unmatched candidates as real seismic events and rejected **31** as false detections. Including the **58** catalogue matches, the review-based precision estimate is:
 
 $$
-\mathrm{Precision}_{\text{review}} = \frac{58 + 85}{174} = \frac{143}{174} = 82.2\%
+\mathrm{Precision}_{\text{review}}
+= \frac{58 + 85}{174}
+= \frac{143}{174}
+= 82.2\%.
 $$
 
-Computing a final post-review $F1$-score requires verifying whether any of the 85 accepted candidates correspond to the 214 unmatched catalogue events (outside the $\pm 2.0\text{ s}$ tolerance) or represent duplicate detections, ensuring consistent TP and FN definitions. Likewise, defining true negatives (TN) requires pre-labeled event-free noise windows. Accordingly, this evaluation reports catalogue recovery, matched-event location/timing errors, and analyst-verified precision within these defined boundaries.
+Duplicate checks were completed, with no retained candidate origin times within 1 s of each other. A final post-review F1-score requires checking whether accepted candidates correspond to catalogue events outside the ±2 s matching tolerance. True negatives were not evaluated because verified event-free windows were not defined.
