@@ -433,7 +433,97 @@ These are preliminary results from a single earthquake and station. The algorith
 
 The close agreement of the S-wave candidate with the bulletin does not, by itself, establish the reliability of the method.
 
+## 11. CEME Phase-Picking Validation
 
+The custom methods were tested on ten additional catalogue earthquakes with manually determined P- and S-wave arrivals at CEME. In known event windows, the raw HHZ MAD detector returned a P candidate for all ten events, with a median absolute timing error of **0.435 s**.
 
+On HHN, the RMS method produced median absolute S timing errors of **1.805 s** using bulletin P arrivals and **1.980 s** using automatic P arrivals. The sustained STA/LTA method produced corresponding errors of **7.245 s** and **7.290 s**.
 
+In the continuous March 14 HHZ scan, nine of the ten bulletin P arrivals had a MAD candidate within **±0.5 s**. In the full-day CEME comparison, both phases matched within ±0.5 s for three of ten events using EQTransformer and two of ten using MAD/RMS.
 
+The subsequent multi-station workflow used MAD P picks on the vertical components. EQTransformer and automatic S picks were used in the CEME experiments.
+
+## 12. Multi-Station P-Wave Detection and Event Association
+
+The workflow was developed on **March 14, 2024** using the seven stations listed in Section 10. StationXML metadata provided station coordinates and elevations.
+
+1. Calculated absolute differences between consecutive samples on each raw vertical waveform. The continuous detector used the preceding 5 s to estimate noise, a threshold of the median plus six scaled MADs, and one-second threshold updates. Crossings separated by no more than 0.5 s were grouped, retaining the first crossing.
+2. Associated P candidates across stations using direct P-wave travel times calculated from **131 development-day catalogue hypocentres** and a constant P-wave velocity of **6.03 km/s**. Initial associations required at least four stations, absolute pick residuals of at most 2.5 s, and residual RMS of at most 0.80 s. When groups shared picks, priority was given to higher station counts and then lower RMS.
+3. Refined origin time, epicentral coordinates, and focal depth using bounded non-linear least squares. Depth was constrained to 0–33 km. Picks with absolute residuals greater than 2.5 s were removed and the location refitted while sufficient station support remained.
+4. Retained candidates with at least five stations, residual RMS of at most 0.80 s, no search-boundary flag, and an estimated epicentre within 30 km of the study-area centre. Estimated origin times within 1 s of each other were flagged as possible duplicates.
+
+### 12.1. Development-Day Results
+
+The workflow produced **962 initial associations**. The first association included all seven stations and gave an estimated origin time of **03:06:46.235 UTC** before location refinement, compared with the mainshock catalogue origin time of **03:06:46.300 UTC**.
+
+After final selection and exclusion of the mainshock control, **113 candidates** were compared with **130 reference events**. One-to-one origin-time matching within **±2.0 s** yielded **28 matches (21.5% catalogue recovery)**, leaving **85 unmatched candidates**.
+
+### 12.2. Independent March Test
+
+The fixed development-day workflow was applied to **March 15–31, 2024 (inclusive, UTC)**. The waveform inventory showed a vertical MiniSEED file for each of the seven stations on all 17 days. The detector processed gap-separated waveform segments.
+
+The test produced **3,914 initial associations** and **174 candidates** met the final selection criteria. No two retained candidates had estimated origin times within 1 s of one another.
+
+## 13. Catalogue Comparison and Evaluation
+
+The test-period reference contained **272 events** within the same 30 km study area, obtained by taking one record per event ID from the monthly GSE phase export. Events were paired one-to-one within **±2.0 s** of their estimated origin times.
+
+| Evaluation outcome | Result |
+|---|---:|
+| Reference catalogue events | 272 |
+| Retained candidates | 174 |
+| Catalogue time matches | 58 |
+| Unmatched reference events | 214 |
+| Unmatched candidates | 116 |
+| Catalogue recovery | 21.3% |
+| Retained candidates with a catalogue time match | 33.3% |
+
+### 13.1. Timing and Location Differences
+
+The following medians were calculated for the **58 time-matched pairs**.
+
+| Measurement | Median |
+|---|---:|
+| Absolute origin-time difference | 0.557 s |
+| Epicentral distance between solutions | 4.395 km |
+| Absolute focal-depth difference | 5.940 km |
+| Fitted arrival residual RMS | 0.401 s |
+
+### 13.2. Retrospective Temporal Cross-Validation
+
+Three expanding temporal splits compared minimum requirements of five and six stations. Earlier days were used to select the requirement, which was then evaluated on the following time block. All three folds selected five stations.
+
+| Validation period | Reference events | Candidates | Matches | Catalogue recovery |
+|---|---:|---:|---:|---:|
+| 19–22 March 2024 | 72 | 29 | 12 | 16.7% |
+| 23–26 March 2024 | 25 | 19 | 5 | 20.0% |
+| 27–31 March 2024 | 10 | 16 | 0 | 0.0% |
+
+Mean recovery across the three blocks was **12.2%**. Pooled validation recovery was **15.9%**, corresponding to **17 of 107 reference events**.
+
+This assessment was retrospective because the aggregate March results had already been inspected. It evaluates the selection of minimum station support and is reported separately from the full-period catalogue recovery of **21.3%**.
+
+## 14. Visual Verification of Unmatched Candidates
+
+The analyst visually reviewed all **116 unmatched candidates**. The review classified **85 as real seismic events** and **31 as false detections**, giving a confirmation rate of **73.3%** among the reviewed candidates.
+
+Together, the **58 catalogue time matches** and **85 accepted candidates** give **143 accepted detections out of 174**, corresponding to a **review-based precision estimate of 82.2%**. This estimate assumes correct catalogue assignments and distinct accepted events.
+
+| Post-review outcome | Count |
+|---|---:|
+| Catalogue time matches | 58 |
+| Additional candidates accepted after review | 85 |
+| Rejected detections | 31 |
+| Total accepted detections | 143 |
+
+If the 85 accepted candidates are established as distinct additional local earthquakes, the reference count increases from **272 to 357**, corresponding to **31.3%**. Remaining catalogue-association and duplicate checks determine the final number of catalogue additions.
+
+## 15. Final Conclusion
+
+The project developed a custom time-series workflow for continuous P detection, multi-station association, and approximate earthquake location in the Čarađe sequence.
+
+For **15–31 March 2024**, the workflow retained **174 candidates** and recovered **58 of 272 reference events** within the selected origin-time tolerance. Visual review accepted **85 additional candidates** as real seismic events and rejected **31 false detections**.
+
+The results demonstrate the value of combining automatic processing with analyst review. The main limitation is the low recovery of known events under the final selection criteria. Further development should improve detection and association of weaker events while preserving the reliability of accepted candidates.
+
+The visual review identified 85 additional seismic events for further processing and inclusion in the Čarađe catalogue.
