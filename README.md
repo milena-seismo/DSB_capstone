@@ -1,529 +1,266 @@
 # DSB Capstone
-# Machine Learning for Seismic Catalogue Completeness and Aftershock Analysis
+# Seismic Catalogue Completeness and Aftershock Detection — Čarađe, Montenegro
 
-## 1. Project Overview
+## Project Overview
 
-This project investigates whether machine learning can improve the completeness of seismic earthquake catalogues by detecting additional events in continuous seismic waveform data.
+This project examines the earthquake sequence following the **M 5.3 Čarađe earthquake on 14 March 2024**. The aim is to detect earthquakes in continuous seismic records, compare the detections with the manual catalogue, and identify possible catalogue additions.
 
-The study focuses on seismic activity in Montenegro during 2024, with particular attention to the **M 5.3 earthquake that occurred on 14 March 2024 near Čarađe, Montenegro**, and its subsequent aftershock sequence.
+The work has three parts:
 
-The main objective is to compare manually processed earthquake records with automatically detected seismic events and investigate whether machine learning can identify smaller earthquakes that may have been missed during routine seismic processing.
+1. **EDA — Catalogue Inspection and Study-Area Selection**
+2. **Modeling — Time-Series Detection and Multi-Station Processing**
+3. **Model Evaluation — Catalogue Comparison, Validation, and Confusion Matrix**
 
-### Research Question
+The main method is a custom MAD detector applied to seismic time series. EQTransformer was tested as a comparison on CEME. The final seven-station workflow uses the custom detector.
 
-**Can machine learning improve the completeness of seismic catalogues and support a more detailed analysis of aftershock sequences and seismogenic fault structures?**
+The work is documented in the EDA and Modeling notebooks. A separate candidate-review notebook supports visual inspection of the unmatched detections.
 
-## 2. Data Collection
+## PART I — Exploratory Data Analysis
 
-The primary dataset is the **2024 earthquake catalogue provided by the Sector for Seismology of the Institute of Hydrometeorology and Seismology (IHMS), Montenegro**.
+### Data and Initial Inspection
 
-The catalogue contains:
+The 2024 earthquake catalogue was provided by the **Sector for Seismology, Institute of Hydrometeorology and Seismology (IHMS), Montenegro**.
 
-- Earthquake origin times
-- Epicentral coordinates (latitude and longitude)
-- Focal depths
-- Earthquake magnitudes
-- Origin-time and hypocentral location uncertainties
-- Number of stations (NST)
-- Azimuthal gap (GAP)
+It contains origin times, epicentral coordinates, depths, magnitudes, location uncertainties, station counts, and azimuthal gaps.
 
-The dataset is available in CSV format in the project repository.
+The original dataset contained **2,293 records and 16 variables**. One exact duplicate was removed, leaving **2,292 unique records**. No missing values were found in the initial inspection.
 
-The catalogue will serve as a reference dataset for comparison with automatically detected seismic events.
+The quality check identified:
 
-Continuous seismic waveform recordings will be used in the next stage of the project.
+- 80 records with a depth of 0 km.
+- Five records with magnitude 0.0.
+- 156 records with depth uncertainty of 11.1 km.
+- Two records with a depth of 33 km, associated with a default processing depth.
 
-## 3. Data Inspection and Cleaning
+These values were reviewed before further analysis. Within the Čarađe study area, zero depths were assigned a fixed value of **10 km** after manual checking. This is an assumed depth. One zero-magnitude event in the study area was also checked and corrected using the seismic analysis software.
 
-The original catalogue contained **2,293 earthquake records and 16 variables**.
+### Regional Selection and EDA
 
-The preliminary inspection included checking data types, missing values, duplicate records, and potentially unreliable seismic parameters.
+The initial geographical selection covered **18–22° E and 41–44° N**, retaining **1,824 events**. This region includes Montenegro and surrounding areas.
 
-The following findings were identified:
+Of these events, **1,701 (93.3%)** had magnitudes from 1.0 to below 3.0. Only **52** had magnitudes below 1.0. March had the highest monthly count, with **476 events**, followed by April with **269**.
 
-- No missing values were detected during the initial inspection.
-- One exact duplicate earthquake record was identified and removed.
-- Five records have a reported magnitude of 0.0.
-- Eighty records have a focal depth of 0 km.
-- A total of 156 records have a depth uncertainty of exactly 11.1 km.
-- Two records have a focal depth of 33 km, which is a default depth configured in the seismic processing system.
+Magnitude, daily and monthly counts, and epicentral distributions were examined to describe the seismic activity and select the detailed study area.
 
-The repeated uncertainty values and zero-depth records indicate potential limitations in hypocentral depth determination.
+### Čarađe Study Area
 
-These records were retained for further quality assessment rather than automatically removed.
+The detailed study area is a circle with a **30 km radius** around the published mainshock epicentre:
 
-After removing the duplicate, **2,292 unique earthquake records** remained.
+| Parameter | Value |
+|---|---|
+| Latitude | 42.974° N |
+| Longitude | 18.661° E |
+| Radius | 30 km |
+| Selected events during 2024 | 906 |
 
-## 4. Geographical Selection
+Distances were calculated with the **Haversine formula**. The same circle was used later to filter estimated event locations.
 
-The original catalogue covers a wider geographical region, including earthquakes outside Montenegro.
+### Initial Aftershock Period
 
-For the preliminary exploratory analysis, a geographical filter was applied using the following coordinate limits:
+The initial catalogue analysis covered **14–20 March 2024** and contained **337 events**.
 
-- **Longitude:** 18°–22° E
-- **Latitude:** 41°–44° N
-
-This selection reduced the dataset from 2,292 to **1,824 earthquake records**.
-
-The selected rectangular region includes Montenegro and surrounding areas. It does not represent the exact national boundaries.
-
-Further geographical and temporal selection will be required to isolate the Čarađe aftershock sequence.
-
-## 5. Exploratory Data Analysis (EDA)
-
-The preliminary EDA examined earthquake magnitudes, monthly seismic activity, and spatial epicentral distribution.
-
-### Magnitude Distribution
-
-The 1,824 earthquakes within the selected geographical region were grouped into the following magnitude intervals:
-
-| Magnitude interval | Number of earthquakes |
+| Date | Events |
 |---|---:|
-| 0 ≤ M < 1 | 52 |
-| 1 ≤ M < 2 | 1,112 |
-| 2 ≤ M < 3 | 589 |
-| 3 ≤ M < 4 | 66 |
-| 4 ≤ M < 5 | 4 |
-| 5 ≤ M < 6 | 1 |
-| **Total** | **1,824** |
-
-Most recorded earthquakes (93.3%) have magnitudes between 1.0 and 3.0.
-
-Only 52 earthquakes have magnitudes below 1.0. This observation raises questions about the detection capabilities and completeness of the existing catalogue, but does not by itself establish the magnitude of completeness.
-
-### Temporal Distribution
-
-The highest number of earthquakes was recorded in **March 2024, with 476 events**, followed by April with 269 events.
-
-This increase is consistent with the occurrence of the Čarađe earthquake and its aftershock activity.
-
-However, the selected geographical region includes other seismic sources, so further analysis is needed to identify events belonging specifically to the Čarađe sequence.
-
-### Spatial Distribution
-
-The spatial analysis shows concentrations of earthquake epicenters within Montenegro and the surrounding region.
-
-The Čarađe M 5.3 earthquake was highlighted on the epicentral distribution plot.
-
-The preliminary spatial analysis provides a basis for selecting a more specific study area for the investigation of aftershocks and potentially active seismogenic structures.
-
-## 6. Planned Machine Learning Approach
-
-The next stage will investigate automatic seismic event detection and phase picking using continuous waveform recordings.
-
-A potential approach is to apply a **pretrained EQTransformer deep learning model through the SeisBench Python library**.
-
-EQTransformer can be used to detect seismic signals and identify P- and S-wave arrivals.
-
-Additional processing will be required to associate phase arrivals, determine earthquake locations, and produce a catalogue suitable for comparison.
-
-The automatically detected events will be compared with the manually processed reference catalogue to assess whether additional earthquakes can be identified.
-
-The final model and processing workflow will be evaluated during the next project stage.
-
-## 7. Preliminary Conclusions
-
-The preliminary analysis reduced the original dataset from **2,293 records to 2,292 unique earthquakes**, followed by geographical selection of **1,824 events**.
-
-The analysis identified data-quality issues, examined the distribution of earthquake magnitudes, and highlighted increased seismic activity during March 2024.
-
-The relatively small number of recorded low-magnitude earthquakes motivates further investigation of catalogue completeness.
-
-The next phase will focus on continuous waveform analysis and evaluate whether machine learning can improve the detection of small earthquakes, particularly within the Čarađe aftershock sequence.
-
-## 8. Project Status
-
-**Completed:**
-- Data collection and loading
-- Initial data inspection
-- Duplicate removal
-- Preliminary data-quality assessment
-- Geographical filtering
-- Magnitude, temporal, and spatial EDA
-
-**Planned:**
-- Selection of the detailed Čarađe study area
-- Preparation of continuous seismic waveform data
-- Automated seismic event detection and phase picking
-- Event association and catalogue construction
-- Comparison with the manually processed catalogue
-- Assessment of catalogue completeness and aftershock characteristics
-
-- ## 9. Detailed Study Area Selection and Catalogue Quality Assessment
-
-### 9.1. Selection of the Čarađe Study Area
-
-Following the preliminary exploratory data analysis, the investigation was narrowed to the aftershock sequence associated with the **M 5.3 earthquake of March 14, 2024, near Čarađe, Montenegro**.
-
-A circular study area with a **30 km radius** was defined around the mainshock epicentral region.
-
-The reference center used for the spatial selection was approximately:
-
-- **Latitude:** 42.974° N
-- **Longitude:** 18.661° E
-- **Radius:** 30 km
-
-The spatial selection was performed using geographical distances between earthquake epicenters and the reference center.
-
-This approach provides a more focused dataset for investigating the spatial and temporal evolution of the Čarađe aftershock sequence.
-
-The selection resulted in **906 earthquakes recorded during 2024** within the defined radius.
-
-### 9.2. Temporal Selection of the Aftershock Sequence
-
-For the initial machine learning experiment, the analysis was further restricted to the period:
-
-**March 14–20, 2024 (inclusive)**
-
-This seven-day interval includes the mainshock and the subsequent period of increased seismic activity.
-
-A total of **337 earthquakes** were identified within the selected spatial and temporal limits.
-
-The daily distribution was:
-
-| Date | Number of earthquakes |
-|---|---:|
-| March 14, 2024 | 131 |
-| March 15, 2024 | 44 |
-| March 16, 2024 | 45 |
-| March 17, 2024 | 44 |
-| March 18, 2024 | 32 |
-| March 19, 2024 | 20 |
-| March 20, 2024 | 21 |
+| 14 March | 131 |
+| 15 March | 44 |
+| 16 March | 45 |
+| 17 March | 44 |
+| 18 March | 32 |
+| 19 March | 20 |
+| 20 March | 21 |
 | **Total** | **337** |
 
-The selected catalogue provides the reference dataset for the initial comparison with machine learning detections.
+Magnitudes ranged from **0.5 to 5.3**, with a median of **1.7**. There were **231 events below magnitude 2.0**.
 
-### 9.3. Review of Zero-Depth and Zero-Magnitude Records
+The Gutenberg–Richter distribution was examined. The Maximum Curvature method gave a preliminary magnitude of completeness of **Mc = 1.3**. This was an initial estimate for the selected period. The project did not calculate a revised Mc for the additional detections, because their magnitudes were not determined.
 
-During catalogue quality assessment, special attention was given to earthquake records containing potentially uncertain or default parameter values.
+## PART II — Modeling and Time-Series Analysis
 
-The original catalogue included:
+### Waveform Data
 
-- **80 earthquakes with a reported focal depth of 0 km**
-- **5 earthquakes with a reported magnitude of 0.0**
-- **156 records with a depth uncertainty of exactly 11.1 km**
-- **2 earthquakes with a focal depth of 33 km**, corresponding to a default depth configured in the seismic processing system
+Continuous MiniSEED records were obtained from the seismic archive. StationXML supplied station coordinates and elevations valid for the waveform date.
 
-These records were examined as part of the catalogue quality-control process.
-
-A reported depth of 0 km does not necessarily represent a physically determined surface earthquake. It may reflect limitations or constraints in hypocentral depth determination.
-
-Similarly, a magnitude value of 0.0 requires careful interpretation and should not automatically be treated as an invalid earthquake record.
-
-Repeated depth uncertainty values and default focal depths indicate that some catalogue parameters may reflect processing conventions rather than independently constrained solutions.
-
-**Decision:** All these records were retained in the reference catalogue.
-
-No earthquakes were excluded solely because of zero focal depth, zero magnitude, repeated depth uncertainty values, or default depth assignments.
-
-This decision preserves the original catalogue information and avoids introducing additional selection bias before the machine learning comparison.
-
-The identified parameter limitations will be considered during subsequent quality assessment, event association, and interpretation of the results.
-
-### 9.4. Final Reference Dataset for the Pilot Study
-
-The selected reference catalogue contains:
-
-| Parameter | Result |
+| Station | Available components |
 |---|---|
-| Study region | Čarađe, Montenegro |
-| Spatial selection | 30 km radius |
-| Annual catalogue within radius | 906 earthquakes |
-| Pilot analysis period | March 14–20, 2024 |
-| Earthquakes in pilot period | 337 |
-| Mainshock magnitude | M 5.3 |
-| Minimum recorded magnitude in pilot catalogue | M 0.5 |
-| Maximum recorded magnitude | M 5.3 |
+| BRY | EHZ |
+| CEME | HHZ, HHN, HHE |
+| DRME | HHZ, HHN, HHE |
+| HCY | EHZ |
+| KOME | HHZ, HHN, HHE |
+| NKME | EHZ |
+| UPM | EHZ |
 
-This dataset will serve as the reference catalogue for evaluating the performance of automated earthquake detection and phase picking.
+ObsPy was used to read and inspect the records. Daily files were checked for availability, and waveform segments separated by gaps were processed independently.
 
-The next stage focuses on preparing continuous seismic waveform recordings and applying the pretrained EQTransformer model.
+The work started with individual CEME event windows. It was then extended to the full day of **14 March** and to all seven stations for **15–31 March**. Waveforms were stored on Google Drive; notebooks and documentation were maintained separately.
 
-## 10. Continuous Seismic Waveform Data Preparation
+### Initial P and S Tests on CEME
 
-### 10.1. Waveform Data Collection
+For P detection, absolute differences between consecutive HHZ samples were compared with a threshold based on the median and **Median Absolute Deviation (MAD)**.
 
-Following the selection of the Čarađe study area and the seven-day aftershock sequence, continuous seismic waveform recordings were prepared for machine learning analysis.
+For S detection, the HHN component was examined using short-term energy, RMS, and STA/LTA. Moving averages, Hann and Savitzky–Golay smoothing, kurtosis, and frequency filters were also tested.
 
-The waveform data originate from the seismic monitoring network operated by the Institute of Hydrometeorology and Seismology (IHMS), Montenegro.
+On the first ten-event check, the P method returned a candidate for every event, with a median absolute timing error of **0.435 s**. S errors were larger and varied between events. The RMS method performed better than the tested STA/LTA rule.
 
-The selected period covers **March 14–20, 2024**, corresponding to Julian days 074–080 of 2024.
+In the continuous CEME scan, nine of these ten reference P arrivals had a candidate within **±0.5 s**. A separate ten-event set was used for further checks.
 
-Continuous recordings were extracted from the original seismic waveform archive and copied to a separate working directory on an external storage device.
+EQTransformer was tested through SeisBench on CEME event windows and on the full day. It provided an external comparison. The final multi-station method used **P picks from the custom MAD detector**.
 
-The original recordings were preserved without modification.
+### Continuous MAD P Detection
 
-### 10.2. Selection of Seismic Stations and Components
+The detector was applied independently to each station's raw vertical waveform.
 
-Seven seismic stations were included in the initial waveform dataset.
+1. Calculate absolute amplitude differences between consecutive samples.
+2. Use the preceding **5 s** to estimate the median and MAD.
+3. Update the threshold every **1 s**.
+4. Select samples above the threshold.
+5. Group crossings separated by at most **0.5 s**, keeping the first crossing.
 
-| Station | Available components | Number of daily files |
-|---|---|---:|
-| BRY | EHZ | 7 |
-| CEME | HHZ, HHN, HHE | 21 |
-| DRME | HHZ, HHN, HHE | 21 |
-| HCY | EHZ | 7 |
-| KOME | HHZ, HHN, HHE | 21 |
-| NKME | EHZ | 7 |
-| UPM | EHZ | 7 |
-| **Total** | **13 channels** | **91** |
+The threshold was:
 
-The selected waveform dataset contains approximately **1.65 GB of MiniSEED data**.
+$$
+T = \mathrm{median} + 6 \times 1.4826 \times \mathrm{MAD}.
+$$
 
-Three-component broadband recordings are available for CEME, DRME and KOME.
+The output is a list of P candidates in UTC. A threshold crossing can also be caused by noise or a later part of a waveform, so multi-station processing is required.
 
-The remaining four stations provide single-component vertical recordings in the selected dataset.
+### Travel-Time Baseline and Association
 
-The initial EQTransformer experiment was restricted to CEME because its three-component recordings are compatible with the pretrained model's input requirements.
+The locations and depths of **131 known events from 14 March** supplied trial source positions. Direct P travel times to each station were estimated using **Vp = 6.03 km/s**, taken from the first layer of CG-506.
 
-Single-component stations will be considered in subsequent processing using an appropriate detection or phase-picking approach.
+The calculation included epicentral distance, source depth, and station elevation. Using one velocity along the path is a regional approximation.
 
-### 10.3. Data Storage and Processing Environment
+For each trial source, the code searched for compatible picks at different stations and estimated a common origin time. Initial groups required:
 
-Waveform files were retained on an external storage device because the complete seismic archive is too large for practical storage in the project GitHub repository.
+- At least four stations.
+- Absolute timing residuals no greater than **2.5 s**.
+- Residual RMS no greater than **0.80 s**.
 
-Google Colab was selected as the initial Python processing environment.
+Groups sharing picks were ranked by station count and then RMS. The trial catalogue ID identifies the starting source position; it is not a catalogue-event assignment.
 
-For the pilot experiment, three MiniSEED files were uploaded to the temporary Colab runtime:
+### Location and Final Filters
 
-- `ME.CEME..HHZ.D.2024.074`
-- `ME.CEME..HHN.D.2024.074`
-- `ME.CEME..HHE.D.2024.074`
+Least-squares fitting estimated latitude, longitude, depth, and origin time. Depth was limited to **0–33 km**. Picks with absolute residuals above **2.5 s** were removed and the solution was fitted again while enough stations remained.
 
-The external archive remains the primary source of waveform data.
+Final candidates required:
 
-The GitHub repository is used for project documentation, notebooks, scripts and selected processing results rather than storing the complete continuous waveform dataset.
-
-### 10.4. Loading Waveform Data Using ObsPy
-
-The ObsPy Python library was used to read the three-component MiniSEED recordings.
-
-The waveform data were loaded into an ObsPy Stream object for inspection and subsequent processing.
-
-The following properties were confirmed:
-
-- Three waveform traces corresponding to HHE, HHN and HHZ.
-- Sampling frequency of **100 Hz** for each component.
-- Approximately 24 hours of continuous recording per component.
-- Approximately 8.64 million samples per component.
-
-The initial continuity check using `get_gaps()` returned no reported gaps.
-
-Additional inspection confirmed that the waveform arrays were not masked.
-
-These checks established that the selected CEME recordings were suitable for the initial model experiment.
-
-### 10.5. Mainshock Waveform Inspection
-
-A two-minute waveform segment was extracted around the March 14, 2024 mainshock.
-
-The segment extended from 30 seconds before to 90 seconds after the catalogue origin time:
-
-**2024-03-14 03:06:46.300 UTC**
-
-The three waveform components were visualized using ObsPy.
-
-The original recordings showed clear seismic signals associated with the mainshock.
-
-A low-frequency baseline variation was particularly noticeable on the HHE component.
-
-To improve waveform visualization, a separate copy of the segment was processed using:
-
-- Mean removal
-- Linear detrending
-- Bandpass filtering from 1 to 15 Hz
-- Four filter corners
-- Zero-phase filtering
-
-The processed visualization provided a clearer representation of the seismic phases.
-
-**The filtered waveform segment was used for visual inspection only.**
-
-The original waveform data were retained for subsequent EQTransformer processing, allowing the pretrained model to apply its intended preprocessing procedures.
-
-### 10.6. Preliminary Waveform Quality Assessment
-
-The initial data inspection confirmed that:
-
-- The selected MiniSEED files could be successfully read using ObsPy.
-- The three CEME components had consistent sampling frequencies.
-- No internal gaps were reported by the initial ObsPy continuity check.
-- No masked waveform samples were identified.
-- The mainshock signal was clearly visible on the three components.
-
-These results supported proceeding with the pretrained EQTransformer model.
-
-The inspection represents an initial waveform quality check rather than a complete assessment of instrumental response, timing accuracy or signal quality across the entire seismic network.
-
-### 10.7. Preparation for Machine Learning Analysis
-
-After completing waveform inspection, the analysis proceeded to automatic earthquake detection and P- and S-wave phase picking.
-
-The pretrained **EQTransformer** model, implemented through the **SeisBench** Python library, was selected for the initial experiment.
-
-The next stage evaluates model performance on:
-
-1. A two-minute waveform segment containing the known M5.3 mainshock.
-2. A continuous 30-minute waveform segment from the same station.
-
-The objective is to verify the model's ability to identify known seismic signals before extending the analysis to longer recordings and additional stations.
-
-### CAPSTONE part II
-
-## Preliminary P- and S-Wave Arrival Detection Using Time Series Analysis
-
-### Objective
-
-Develop and test a custom algorithm for identifying the first P- and S-wave arrivals directly from continuous seismic waveform data, without using pretrained machine learning models.
-
-### Data
-
-- **Earthquake:** 14 March 2024, 03:06:46.30 UTC, M5.3, Čarađe
-- **Station:** CEME
-- **Waveform format:** MiniSEED
-- **Sampling frequency:** 100 Hz (10 ms sampling interval)
-- **Components:** HHZ for P-wave analysis; HHN for S-wave analysis
-- **Reference data:** Manually determined phase arrivals from the GSE seismic bulletin
-
-### 1. P-Wave Detection — HHZ
-
-1. Extracted a 120-second waveform around the mainshock.
-2. Calculated absolute amplitude differences between consecutive samples using Pandas `.diff()`.
-3. Estimated the background noise from a 3.5-second interval preceding the expected P arrival.
-4. Calculated a robust detection threshold using the median and Median Absolute Deviation (MAD).
-5. Identified the first sample exceeding the threshold as a preliminary P-wave arrival candidate.
-6. Compared the detected arrival with the seismic bulletin.
-
-**P-wave results**
-
-| Measurement | UTC arrival |
+| Criterion | Limit |
 |---|---|
-| Bulletin | 03:06:55.370 |
-| Automatic detection | 03:06:55.120 |
-| Manually reviewed candidate | 03:06:55.140 |
-| Automatic detection residual | −0.250 s |
+| Station support | At least 5 stations |
+| Arrival-residual RMS | ≤ 0.80 s |
+| Search boundary | No boundary flag |
+| Study area | Within the 30 km circle |
 
-### 2. S-Wave Detection — HHN
+Origin times separated by at most 1 s were flagged for possible duplicate review. A low RMS alone does not prove that the association is correct.
 
-1. Analyzed the horizontal HHN component.
-2. Calculated short-term and long-term signal energy using Pandas `.rolling()`.
-3. Examined the STA/LTA energy ratio around the expected S-wave arrival.
-4. Calculated absolute amplitude differences and short-term RMS amplitude using a 0.2-second rolling window.
-5. Identified the strongest sustained RMS increase using a smoothed RMS-change function.
-6. Searched backward over a 0.3-second interval to identify the local RMS minimum preceding this increase.
-7. Used this minimum as a preliminary S-wave onset candidate.
+### Development Day — 14 March
 
-**S-wave results**
+The workflow produced **962 initial associations**. After final filtering and exclusion of the mainshock control, **113 candidates** remained.
 
-| Measurement | UTC arrival |
-|---|---|
-| Bulletin | 03:07:02.960 |
-| Maximum RMS increase | 03:07:03.130 |
-| Estimated S-wave onset | 03:07:02.970 |
-| Estimated onset residual | +0.010 s |
+Comparison with **130 reference aftershocks**, using one-to-one origin-time matching within **±2 s**, gave **28 matches** and **85 unmatched candidates**. Catalogue recovery was **21.5%**.
 
-### 3. Preliminary Interpretation
+### March Test — 15–31 March
 
-The custom time series analysis produced arrival candidates close to the manually determined phase arrivals.
+The fixed workflow processed all seven stations over **17 days**. It produced **3,914 initial associations** and **174 retained candidates**.
 
-The P-wave method uses a robust amplitude-change threshold, while the S-wave method combines moving-window energy analysis with a search for the onset of a sustained RMS increase.
+No retained candidate origin times were within 1 s of each other. This check identifies close-time solutions but does not exclude every possible duplicate.
 
-These are preliminary results from a single earthquake and station. The algorithms currently operate within selected time intervals and have not yet been validated for independent detection throughout continuous waveform records.
+## PART III — Model Evaluation
 
-The close agreement of the S-wave candidate with the bulletin does not, by itself, establish the reliability of the method.
+### Catalogue Comparison
 
-## 11. CEME Phase-Picking Validation
+The final reference was built from the **complete monthly GSE phase export**, with one record per event ID. It includes events represented by phase records at one or more of the seven stations.
 
-The custom methods were tested on ten additional catalogue earthquakes with manually determined P- and S-wave arrivals at CEME. In known event windows, the raw HHZ MAD detector returned a P candidate for all ten events, with a median absolute timing error of **0.435 s**.
+For **15–31 March**, the reference contained **272 events** inside the study area. The earlier 14–20 March subset was not used as the final test reference.
 
-On HHN, the RMS method produced median absolute S timing errors of **1.805 s** using bulletin P arrivals and **1.980 s** using automatic P arrivals. The sustained STA/LTA method produced corresponding errors of **7.245 s** and **7.290 s**.
+Candidates and catalogue events were paired one-to-one within **±2 s of origin time**.
 
-In the continuous March 14 HHZ scan, nine of the ten bulletin P arrivals had a MAD candidate within **±0.5 s**. In the full-day CEME comparison, both phases matched within ±0.5 s for three of ten events using EQTransformer and two of ten using MAD/RMS.
-
-The subsequent multi-station workflow used MAD P picks on the vertical components. EQTransformer and automatic S picks were used in the CEME experiments.
-
-## 12. Multi-Station P-Wave Detection and Event Association
-
-The workflow was developed on **March 14, 2024** using the seven stations listed in Section 10. StationXML metadata provided station coordinates and elevations.
-
-1. Calculated absolute differences between consecutive samples on each raw vertical waveform. The continuous detector used the preceding 5 s to estimate noise, a threshold of the median plus six scaled MADs, and one-second threshold updates. Crossings separated by no more than 0.5 s were grouped, retaining the first crossing.
-2. Associated P candidates across stations using direct P-wave travel times calculated from **131 development-day catalogue hypocentres** and a constant P-wave velocity of **6.03 km/s**. Initial associations required at least four stations, absolute pick residuals of at most 2.5 s, and residual RMS of at most 0.80 s. When groups shared picks, priority was given to higher station counts and then lower RMS.
-3. Refined origin time, epicentral coordinates, and focal depth using bounded non-linear least squares. Depth was constrained to 0–33 km. Picks with absolute residuals greater than 2.5 s were removed and the location refitted while sufficient station support remained.
-4. Retained candidates with at least five stations, residual RMS of at most 0.80 s, no search-boundary flag, and an estimated epicentre within 30 km of the study-area centre. Estimated origin times within 1 s of each other were flagged as possible duplicates.
-
-### 12.1. Development-Day Results
-
-The workflow produced **962 initial associations**. The first association included all seven stations and gave an estimated origin time of **03:06:46.235 UTC** before location refinement, compared with the mainshock catalogue origin time of **03:06:46.300 UTC**.
-
-After final selection and exclusion of the mainshock control, **113 candidates** were compared with **130 reference events**. One-to-one origin-time matching within **±2.0 s** yielded **28 matches (21.5% catalogue recovery)**, leaving **85 unmatched candidates**.
-
-### 12.2. Independent March Test
-
-The fixed development-day workflow was applied to **March 15–31, 2024 (inclusive, UTC)**. The waveform inventory showed a vertical MiniSEED file for each of the seven stations on all 17 days. The detector processed gap-separated waveform segments.
-
-The test produced **3,914 initial associations** and **174 candidates** met the final selection criteria. No two retained candidates had estimated origin times within 1 s of one another.
-
-## 13. Catalogue Comparison and Evaluation
-
-The test-period reference contained **272 events** within the same 30 km study area, obtained by taking one record per event ID from the monthly GSE phase export. Events were paired one-to-one within **±2.0 s** of their estimated origin times.
-
-| Evaluation outcome | Result |
+| Outcome | Count |
 |---|---:|
-| Reference catalogue events | 272 |
+| Reference events | 272 |
 | Retained candidates | 174 |
 | Catalogue time matches | 58 |
 | Unmatched reference events | 214 |
-| Unmatched candidates | 116 |
-| Catalogue recovery | 21.3% |
-| Retained candidates with a catalogue time match | 33.3% |
+| Candidates without a catalogue match | 116 |
 
-### 13.1. Timing and Location Differences
+Catalogue recovery was:
 
-The following medians were calculated for the **58 time-matched pairs**.
+$$
+\frac{58}{272} \times 100 = 21.3\%.
+$$
+
+The proportion of retained candidates with a catalogue time match was **33.3%**.
+
+### Timing and Location Errors
+
+For the **58 time-matched pairs**, the medians were:
 
 | Measurement | Median |
 |---|---:|
 | Absolute origin-time difference | 0.557 s |
-| Epicentral distance between solutions | 4.395 km |
-| Absolute focal-depth difference | 5.940 km |
-| Fitted arrival residual RMS | 0.401 s |
+| Epicentral separation | 4.395 km |
+| Absolute depth difference | 5.940 km |
+| Fitted P-arrival residual RMS | 0.401 s |
 
-### 13.2. Retrospective Temporal Cross-Validation
+These statistics apply to the matched subset. Arrival RMS measures agreement with the velocity approximation. Catalogue differences measure agreement with the reference solutions.
 
-Three expanding temporal splits compared minimum requirements of five and six stations. Earlier days were used to select the requirement, which was then evaluated on the following time block. All three folds selected five stations.
+### Retrospective Temporal Cross-Validation
 
-| Validation period | Reference events | Candidates | Matches | Catalogue recovery |
+Three expanding temporal splits compared minimum station requirements of five and six. Earlier days were used to select the requirement, and the following block was used for validation. All folds selected five stations.
+
+| Validation period | Reference events | Candidates | Matches | Recovery |
 |---|---:|---:|---:|---:|
-| 19–22 March 2024 | 72 | 29 | 12 | 16.7% |
-| 23–26 March 2024 | 25 | 19 | 5 | 20.0% |
-| 27–31 March 2024 | 10 | 16 | 0 | 0.0% |
+| 19–22 March | 72 | 29 | 12 | 16.7% |
+| 23–26 March | 25 | 19 | 5 | 20.0% |
+| 27–31 March | 10 | 16 | 0 | 0.0% |
 
-Mean recovery across the three blocks was **12.2%**. Pooled validation recovery was **15.9%**, corresponding to **17 of 107 reference events**.
+Mean block recovery was **12.2%**. Pooled recovery was **15.9%**, or **17 of 107 reference events**.
 
-This assessment was retrospective because the aggregate March results had already been inspected. It evaluates the selection of minimum station support and is reported separately from the full-period catalogue recovery of **21.3%**.
+This was a retrospective assessment because aggregate March results had already been inspected. It evaluates minimum station support. It is reported separately from the fixed-setting recovery of **21.3%** for the full period.
 
-## 14. Visual Verification of Unmatched Candidates
+### Visual Review
 
-The analyst visually reviewed all **116 unmatched candidates**. The review classified **85 as real seismic events** and **31 as false detections**, giving a confirmation rate of **73.3%** among the reviewed candidates.
+The analyst reviewed all **116 unmatched candidates**, accepting **85 as real seismic events** and rejecting **31 as false detections**. The acceptance rate in this reviewed group was **73.3%**.
 
-Together, the **58 catalogue time matches** and **85 accepted candidates** give **143 accepted detections out of 174**, corresponding to a **review-based precision estimate of 82.2%**. This estimate assumes correct catalogue assignments and distinct accepted events.
+Together with the 58 catalogue assignments, this gives **143 accepted detections among 174 candidates**. The corresponding review-based precision estimate is **82.2%**, assuming correct catalogue assignments and distinct accepted events.
 
-| Post-review outcome | Count |
-|---|---:|
-| Catalogue time matches | 58 |
-| Additional candidates accepted after review | 85 |
-| Rejected detections | 31 |
-| Total accepted detections | 143 |
+The review labels are used as analyst assessments. Their reliability depends on the waveform evidence and the consistency of the event associations.
 
-If the 85 accepted candidates are established as distinct additional local earthquakes, the reference count increases from **272 to 357**, corresponding to **31.3%**. Remaining catalogue-association and duplicate checks determine the final number of catalogue additions.
+### Conclusion
 
-## 15. Final Conclusion
+The workflow combined continuous time-series detection, multi-station P association, approximate location, and analyst review.
 
-The project developed a custom time-series workflow for continuous P detection, multi-station association, and approximate earthquake location in the Čarađe sequence.
+It recovered **58 of 272 known events**, showing limited catalogue recovery under the final criteria. Visual review also accepted **85 unmatched candidates** and removed **31 false detections**.
 
-For **15–31 March 2024**, the workflow retained **174 candidates** and recovered **58 of 272 reference events** within the selected origin-time tolerance. Visual review accepted **85 additional candidates** as real seismic events and rejected **31 false detections**.
+If all 85 accepted candidates are established as distinct additional local earthquakes, the reference count increases from **272 to 357**, or by **31.3%**. Final catalogue inclusion requires checking remaining associations and duplicate representations.
 
-The results demonstrate the value of combining automatic processing with analyst review. The main limitation is the low recovery of known events under the final selection criteria. Further development should improve detection and association of weaker events while preserving the reliability of accepted candidates.
+The main outcome is a reproducible candidate-selection workflow. Further work should improve recovery of known events, test the velocity approximation, and complete the catalogue processing of accepted candidates.
 
-The visual review identified 85 additional seismic events for further processing and inclusion in the Čarađe catalogue.
+### Confusion Matrix — Final Evaluation Status
+
+The evaluation metrics depend on whether performance is measured strictly against the existing manual bulletin or updated with multi-station analyst review.
+
+| Outcome | Catalogue-Only Comparison | After Analyst Review |
+|---|---:|---|
+| **Catalogue time matches (TP)** | 58 | 58 retained catalogue matches |
+| **Unmatched candidates** | 116 (treated as FP) | 85 accepted (new TP); 31 rejected (FP) |
+| **Unmatched reference events (FN)** | 214 | Pending association check against accepted candidates |
+| **True negatives (TN)** | Not defined | Not defined |
+
+#### 1. Catalogue-Only Baseline
+Treating all unmatched candidates as false positives yields conservative baseline metrics against the unexpanded reference bulletin:
+
+$$
+\mathrm{Precision}_{\text{catalogue}} = \frac{58}{174} = 33.3\%, \qquad
+\mathrm{Recall}_{\text{catalogue}} = \frac{58}{272} = 21.3\%, \qquad
+F1_{\text{catalogue}} = \frac{2 \times 58}{2 \times 58 + 116 + 214} = 26.0\%
+$$
+
+#### 2. Post-Review Performance and Methodological Scope
+Because the catalogue-only convention penalizes genuine uncatalogued earthquakes as false detections, incorporating the **85** visually confirmed events provides a more realistic precision estimate:
+
+$$
+\mathrm{Precision}_{\text{review}} = \frac{58 + 85}{174} = \frac{143}{174} = 82.2\%
+$$
+
+Computing a final post-review $F1$-score requires verifying whether any of the 85 accepted candidates correspond to the 214 unmatched catalogue events (outside the $\pm 2.0\text{ s}$ tolerance) or represent duplicate detections, ensuring consistent TP and FN definitions. Likewise, defining true negatives (TN) requires pre-labeled event-free noise windows. Accordingly, this evaluation reports catalogue recovery, matched-event location/timing errors, and analyst-verified precision within these defined boundaries.
