@@ -253,10 +253,14 @@ The evaluation metrics depend on whether performance is measured strictly agains
 Treating all unmatched candidates as false positives yields conservative baseline metrics against the unexpanded reference bulletin:
 
 $$
-\mathrm{Precision}_{\text{catalogue}} = \frac{58}{174} = 33.3\%, \qquad
+\mathrm{Precision}_{\text{catalogue}} = \frac{58}{174} = 33.3\%
+$$
 
-\mathrm{Recall}_{\text{catalogue}} = \frac{58}{272} = 21.3\%, \qquad
+$$
+\mathrm{Recall}_{\text{catalogue}} = \frac{58}{272} = 21.3\%
+$$
 
+$$
 F1_{\text{catalogue}} = \frac{2 \times 58}{2 \times 58 + 116 + 214} = 26.0\%
 $$
 
