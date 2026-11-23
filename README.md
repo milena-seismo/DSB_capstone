@@ -153,7 +153,7 @@ Final candidates required:
 
 Origin times separated by at most 1 s were flagged for possible duplicate review. A low RMS alone does not prove that the association is correct.
 
-### Development Day — 14 March
+### Training Day Dataset — 14 March
 
 The workflow produced **962 initial associations**. After final filtering and exclusion of the mainshock control, **113 candidates** remained.
 
