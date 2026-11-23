@@ -73,6 +73,7 @@ The initial catalogue analysis covered **14–20 March 2024** and contained **33
 Magnitudes ranged from **0.5 to 5.3**, with a median of **1.7**. There were **231 events below magnitude 2.0**.
 
 The Gutenberg–Richter distribution was examined. The Maximum Curvature method gave a preliminary magnitude of completeness of **Mc = 1.3**. This was an initial estimate for the selected period. The project did not calculate a revised Mc for the additional detections, because their magnitudes were not determined.
+MAXC can underestimate Mc. Comparing completeness methods and separating the first 24 hours from later periods remain tasks for further work. The catalogue also contains both ML and Md magnitudes.
 
 ## PART II — Modeling and Time-Series Analysis
 
@@ -140,7 +141,7 @@ Groups sharing picks were ranked by station count and then RMS. The trial catalo
 
 ### Location and Final Filters
 
-Least-squares fitting estimated latitude, longitude, depth, and origin time. Depth was limited to **0–33 km**. Picks with absolute residuals above **2.5 s** were removed and the solution was fitted again while enough stations remained.
+Least-squares fitting estimated latitude, longitude, depth, and origin time. Depth varied freely between 0 and 33 km, within the first layer of the adopted CG-506 model, using Vp = 6.03 km/s. This was a bounded depth interval, not a fixed-depth assumption.
 
 Final candidates required:
 
@@ -152,6 +153,7 @@ Final candidates required:
 | Study area | Within the 30 km circle |
 
 Origin times separated by at most 1 s were flagged for possible duplicate review. A low RMS alone does not prove that the association is correct.
+
 
 ### Training Day Dataset — 14 March
 
@@ -170,6 +172,7 @@ No retained candidate origin times were within 1 s of each other. This check ide
 ### Catalogue Comparison
 
 The final reference was built from the **complete monthly GSE phase export**, with one record per event ID. It includes events represented by phase records at one or more of the seven stations.
+
 
 For **15–31 March**, the reference contained **272 events** inside the study area. The earlier 14–20 March subset was not used as the final test reference.
 
@@ -234,8 +237,7 @@ It recovered **58 of 272 known events**, showing limited catalogue recovery unde
 
 If all 85 accepted candidates are established as distinct additional local earthquakes, the reference count increases from **272 to 357**, or by **31.3%**. Final catalogue inclusion requires checking remaining associations and duplicate representations.
 
-The main outcome is a reproducible candidate-selection workflow. Further work should improve recovery of known events, test the velocity approximation, and complete the catalogue processing of accepted candidates.
-
+The main outcome is a reproducible candidate-selection workflow. Further work will include recordings from 13 stations in Montenegro, seven AdriaArray stations, and additional stations from Albania, Serbia, Croatia, and Republika Srpska. The expanded dataset will support reassessment of detection, association, location constraints and filtering choices.
 ### Confusion Matrix — Final Evaluation Status
 
 The evaluation metrics depend on whether performance is measured strictly against the existing manual bulletin or updated with multi-station analyst review.
