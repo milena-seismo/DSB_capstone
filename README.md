@@ -1,4 +1,4 @@
-# DSB Capstone
+n# DSB Capstone
 # Seismic Catalogue Completeness and Aftershock Detection — Čarađe, Montenegro
 
 ## Project Overview
@@ -13,7 +13,7 @@ The work has three parts:
 
 The main method is a custom MAD detector applied to seismic time series. EQTransformer was tested as a comparison on CEME. The final seven-station workflow uses the custom detector.
 
-The work is documented in the EDA and Modeling notebooks. A separate candidate-review notebook supports visual inspection of the unmatched detections.
+The work is documented in the EDA and Modeling notebooks. A separate candidate-review notebook supports visual inspection of the unmatched detections. The [Candidate Validation notebook](notebook/Capstone_Candidate_Validation.ipynb) displays candidate waveforms and allows review decisions to be saved separately, without changing the Modeling results.
 
 ## PART I — Exploratory Data Analysis
 
