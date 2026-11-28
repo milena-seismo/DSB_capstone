@@ -95,3 +95,28 @@ Tasks 1–4 change the conclusions; 5–9 strengthen them. If time is short, do 
 - Logistic regression, ensembles and model explainability: the station detection-probability model in the accompanying notebook.
 
 The accompanying notebook runs end-to-end in Colab from your two public CSVs. Part 9 runs on the result tables you have already saved on Drive.
+
+
+### Replay to feedback
+
+
+
+Thanks for the detailed feedback and the accompanying notebook. I will revise the conclusion to clarify the scope of the project, the filtering decisions and the limitations of the evaluation.
+
+This project is a pilot study using seven nearby seismic stations selected to examine the Čarađe source area and identify potentially missed earthquakes. The reference catalogue uses substantially more stations, including data from the wider regional network. The two workflows therefore have different input data and detection capabilities. This is important when interpreting catalogue recovery, although it does not explain every missed event.
+
+When I return to the office, I plan to extend the analysis to recordings from 13 stations in Montenegro, seven AdriaArray stations, and additional stations from Albania, Serbia, Croatia, and Republika Srpska. This expanded dataset will allow me to reassess the methods tested during the project and the alternatives you suggested.
+
+Regarding hypocentral depth, the workflow did not use a fixed depth. Depth was estimated freely within 0–33 km, corresponding to the first layer of the adopted CG-506 velocity model, with Vp = 6.03 km/s. The 33 km value defines the layer boundary and the depth range used in this pilot. I appreciate your comparison with the bulletin arrivals, which supports this velocity approximation. A fixed depth of approximately 13 km would be a different modelling assumption, whose effect should be assessed before adoption.
+
+Search-boundary solutions were deliberately excluded from the final pilot dataset. I will retain that selection when reporting the existing results, but revise its interpretation. Your development-day comparison shows that the filter also removed catalogue-matched events without improving the catalogue-matched proportion. I will therefore describe it as a restrictive selection criterion, rather than evidence that boundary solutions are false detections. Reassessing these solutions will be part of the extended study.
+
+For the visual review, I will add a separate notebook containing the two cells used to display the candidate waveforms, together with a short explanation of the seismic features considered during inspection. I did not save individual review labels and will state this limitation. The 82.2% figure will be described as a precision estimate based on my seismological review, rather than an independently validated score. The 85 accepted detections will be distinguished from a final claim of 85 new Čarađe aftershocks. Their status requires comparison with the full regional bulletin.
+
+I will also clarify that the similar development-day and test-period recovery percentages do not establish stable performance across all periods. The temporal validation results and their small event counts need to be considered. Confidence intervals would help communicate this uncertainty.
+
+The initial Mc estimate will be identified as a preliminary MAXC result for its stated time window. Comparing completeness methods and time periods, calculating magnitudes for additional events, and reassessing Mc and b-values are appropriate extensions of the work. Estimates of missing earthquakes from Gutenberg–Richter extrapolation should remain clearly separated from observed detections.
+
+Finally, I will check the remaining inconsistencies in the written material, including the old reference counts, the description of the zero-magnitude event, the depth treatment and the wording of the duplicate check. The proximity check should be described as such. I will also clarify the research question and distinguish catalogue agreement from review-based precision.
+
+These revisions will make the conclusion more precise while preserving the completed pilot results. The broader methodological comparisons will form the next stage of the project using the full available station dataset.
